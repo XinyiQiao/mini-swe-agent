@@ -4,6 +4,7 @@
 # Read this first: https://mini-swe-agent.com/latest/usage/mini/  (usage)
 
 import os
+import time
 import traceback
 from pathlib import Path
 from typing import Any
@@ -93,6 +94,7 @@ def main(
 
     agent = agent_class(model, env, **config.get("agent", {}))
     exit_status, result, extra_info = None, None, None
+    start_time = time.perf_counter()
     try:
         exit_status, result = agent.run(task)  # type: ignore[arg-type]
     except Exception as e:
@@ -100,7 +102,9 @@ def main(
         exit_status, result = type(e).__name__, str(e)
         extra_info = {"traceback": traceback.format_exc()}
     finally:
-        save_traj(agent, output, exit_status=exit_status, result=result, extra_info=extra_info)  # type: ignore[arg-type]
+        execution_time = time.perf_counter() - start_time
+        logger.info(f"Total task execution time: {execution_time:.3f}s")
+        save_traj(agent, output, exit_status=exit_status, result=result, extra_info=extra_info, execution_time=execution_time)  # type: ignore[arg-type]
     return agent
 
 

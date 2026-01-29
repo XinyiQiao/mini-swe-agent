@@ -19,6 +19,7 @@ def save_traj(
     exit_status: str | None = None,
     result: str | None = None,
     extra_info: dict | None = None,
+    execution_time: float | None = None,
     print_fct: Callable = print,
     **kwargs,
 ):
@@ -31,6 +32,7 @@ def save_traj(
         exit_status: The exit status of the agent.
         result: The result/submission of the agent.
         extra_info: Extra information to save (will be merged into the info dict).
+        execution_time: Total execution time in seconds.
         **kwargs: Additional information to save (will be merged into top level)
 
     """
@@ -44,6 +46,7 @@ def save_traj(
                 "instance_cost": 0.0,
                 "api_calls": 0,
             },
+            "execution_time": execution_time,
             "mini_version": __version__,
         },
         "messages": [],

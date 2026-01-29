@@ -140,6 +140,7 @@ def process_instance(
     agent = None
     extra_info = None
     env = None
+    start_time = time.perf_counter()
 
     try:
         env = get_sb_environment(config, instance)
@@ -156,6 +157,8 @@ def process_instance(
         exit_status, result = type(e).__name__, str(e)
         extra_info = {"traceback": traceback.format_exc()}
     finally:
+        execution_time = time.perf_counter() - start_time
+        logger.info(f"Task execution time for {instance_id}: {execution_time:.3f}s")
         if env and hasattr(env, "stop"):
             env.stop()
         save_traj(
@@ -165,6 +168,7 @@ def process_instance(
             result=result,
             extra_info=extra_info,
             instance_id=instance_id,
+            execution_time=execution_time,
             print_fct=logger.info,
         )
         update_preds_file(output_dir / "preds.json", instance_id, model.config.model_name, result)
