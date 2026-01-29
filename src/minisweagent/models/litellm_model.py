@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Literal
@@ -29,6 +30,8 @@ class LitellmModelConfig(BaseModel):
     """Set explicit cache control markers, for example for Anthropic models"""
     cost_tracking: Literal["default", "ignore_errors"] = os.getenv("MSWEA_COST_TRACKING", "default")
     """Cost tracking mode for this model. Can be "default" or "ignore_errors" (ignore errors/missing cost info)"""
+    log_request_time: bool = os.getenv("MSWEA_LOG_REQUEST_TIME", "true").lower() == "true"
+    """Enable request time logging for API calls."""
 
 
 class LitellmModel:
@@ -58,9 +61,20 @@ class LitellmModel:
     )
     def _query(self, messages: list[dict[str, str]], **kwargs):
         try:
-            return litellm.completion(
-                model=self.config.model_name, messages=messages, **(self.config.model_kwargs | kwargs)
+            start_time = time.perf_counter() if self.config.log_request_time else None
+
+            response = litellm.completion(
+                model=self.config.model_name,
+                messages=messages,
+                **(self.config.model_kwargs | kwargs),
             )
+
+            if start_time is not None:
+                request_time = time.perf_counter() - start_time
+                logger.info(f"Request time for {self.config.model_name}: {request_time:.3f}s")
+                response._request_time = request_time
+
+            return response
         except litellm.exceptions.AuthenticationError as e:
             e.message += " You can permanently set your API key with `mini-extra config set KEY VALUE`."
             raise e
@@ -89,11 +103,15 @@ class LitellmModel:
         self.n_calls += 1
         self.cost += cost
         GLOBAL_MODEL_STATS.add(cost)
+
+        extra = {"response": response.model_dump()}
+        request_time = getattr(response, "_request_time", None)
+        if request_time is not None:
+            extra["request_time"] = request_time
+
         return {
             "content": response.choices[0].message.content or "",  # type: ignore
-            "extra": {
-                "response": response.model_dump(),
-            },
+            "extra": extra,
         }
 
     def get_template_vars(self) -> dict[str, Any]:

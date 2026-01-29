@@ -240,9 +240,12 @@ environment:
     PIP_PROGRESS_BAR: 'off'
     TQDM_DISABLE: '1'
   environment_class: docker
+  docker_run_args: 
+    - --network=host
 
 model:
-  model_name: "anthropic/claude-sonnet-4-5-20250929"
+  model_name: "hosted_vllm/Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8"
   model_kwargs:
+    api_base: "http://localhost:8000/v1"
     drop_params: true
-    temperature: 0.0
+    temperature: 0.7
