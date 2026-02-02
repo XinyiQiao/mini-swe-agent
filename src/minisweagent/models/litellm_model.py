@@ -71,7 +71,7 @@ class LitellmModel:
 
             if start_time is not None:
                 request_time = time.perf_counter() - start_time
-                logger.info(f"Request time for {self.config.model_name}: {request_time:.3f}s")
+                logger.info(f"Request time for {response.id}: {request_time:.3f}s")
                 response._request_time = request_time
 
             return response
