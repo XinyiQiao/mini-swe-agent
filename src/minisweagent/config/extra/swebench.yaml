@@ -244,7 +244,7 @@ environment:
     - --network=host
 
 model:
-  model_name: "hosted_vllm/Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8"
+  model_name: "hosted_vllm/Qwen/Qwen3-Coder-Next"
   model_kwargs:
     api_base: "http://localhost:8000/v1"
     drop_params: true
